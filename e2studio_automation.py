@@ -9,17 +9,20 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'clip
 from pywinauto.application import Application
 from pywinauto.keyboard import send_keys
 
+def log(msg):
+    print(msg, file=sys.stderr)
+
 class E2StudioAutomation:
     def __init__(self):
         # 1. Connect to Running e2 studio (Must use UIA for Eclipse/SWT)
-        print(">> Hooking into e2 studio...")
+        log(">> Hooking into e2 studio...")
         self.app = Application(backend="uia").connect(path="e2studio.exe")
         self.main_win = self.app.window(title_re=".*e2 studio")
         self.main_win.set_focus()
 
     def open_view(self, category, view_name):
         """Drives the Window -> Show View -> Other menu to open specific debug views."""
-        print(f">> Opening view: {category} -> {view_name}")
+        log(f">> Opening view: {category} -> {view_name}")
         self.main_win.menu_select("Window->Show View->Other...")
         time.sleep(0.5)
         # Type to filter, or navigate the tree
@@ -39,7 +42,7 @@ class E2StudioAutomation:
 
     def extract_variable_expression(self, var_name):
         # 2. Ensure Expressions View is Open
-        print(f">> Extracting variable: {var_name}")
+        log(f">> Extracting variable: {var_name}")
         self.main_win.type_keys("%+q")
         time.sleep(0.5)
         self.main_win.type_keys("x")
@@ -55,18 +58,18 @@ class E2StudioAutomation:
             tree = self.main_win.child_window(control_type="Tree")
             item = tree.get_item(f"\\{var_name}")
             val = item.legacy_iaccessible_value()
-            print(f"CAPTURED VALUE (Method A): {val}")
+            log(f"CAPTURED VALUE (Method A): {val}")
             return val
         except Exception as e:
-            print(">> UI Read failed. Attempting Clipboard Fallback...")
+            log(">> UI Read failed. Attempting Clipboard Fallback...")
             send_keys("^c") # Ctrl+C
             try:
                 import clipboard
                 val = clipboard.paste()
             except ImportError:
-                print(">> Warning: clipboard submodule failed to load.")
+                log(">> Warning: clipboard submodule failed to load.")
                 val = "N/A"
-            print(f"CAPTURED VALUE (Method B): {val}")
+            log(f"CAPTURED VALUE (Method B): {val}")
             return val
 
     # --- Full GDB Mode Features ---
@@ -90,38 +93,59 @@ class E2StudioAutomation:
     # --- Debug Execution Controls ---
     def step_into(self):
         """Simulate F5 - Step Into"""
-        print(">> Stepping Into (F5)...")
+        log(">> Stepping Into (F5)...")
         self.main_win.type_keys("{F5}")
 
     def step_over(self):
         """Simulate F6 - Step Over"""
-        print(">> Stepping Over (F6)...")
+        log(">> Stepping Over (F6)...")
         self.main_win.type_keys("{F6}")
 
     def resume(self):
         """Simulate F8 - Resume Execution"""
-        print(">> Resuming Execution (F8)...")
+        log(">> Resuming Execution (F8)...")
         self.main_win.type_keys("{F8}")
 
     def suspend(self):
         """Suspend execution. Usually requires finding the Suspend button on the toolbar."""
-        print(">> Suspending Execution...")
+        log(">> Suspending Execution...")
         # Fallback to menu if direct shortcut doesn't exist
         self.main_win.menu_select("Run->Suspend")
 
 
 if __name__ == "__main__":
-    # Example Usage Session
+    import argparse
+    parser = argparse.ArgumentParser(description="e2 studio Automation CLI")
+    parser.add_argument("action", choices=[
+        "extract", "step_into", "step_over", "resume", "suspend",
+        "open_registers", "open_memory", "open_debug", "open_rtos"
+    ], help="The action to perform")
+    parser.add_argument("--var", help="The variable name to extract (required for 'extract' action)")
+
+    args = parser.parse_args()
+
     e2 = E2StudioAutomation()
 
-    # Setup full GDB mode visibility
-    e2.open_debug_view()       # Stack/Threads
-    e2.open_registers_view()   # CPU State
-    e2.open_memory_view()      # Memory
-    e2.open_rtos_resources_view() # RTOS Queues/Tasks
-
-    # Execution
-    e2.step_over()
-
-    # Extraction
-    e2.extract_variable_expression("my_sensor_value")
+    if args.action == "extract":
+        if not args.var:
+            log("Error: --var is required for extract action")
+            sys.exit(1)
+        # Ensure only the value is printed to stdout so the extension can capture it easily
+        # Everything else is routed to stderr via log()
+        print(e2.extract_variable_expression(args.var))
+    elif args.action == "step_into":
+        e2.step_into()
+    elif args.action == "step_over":
+        e2.step_over()
+    elif args.action == "resume":
+        e2.resume()
+    elif args.action == "suspend":
+        e2.suspend()
+    elif args.action == "open_registers":
+        e2.open_registers_view()
+    elif args.action == "open_memory":
+        e2.open_memory_view()
+    elif args.action == "open_debug":
+        e2.open_debug_view()
+    elif args.action == "open_rtos":
+        e2.open_rtos_resources_view()

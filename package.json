@@ -1,0 +1,71 @@
+{
+  "name": "e2studio-automation",
+  "displayName": "e2 studio Automation",
+  "description": "Drives a Renesas e2 studio debugging session using Pywinauto UI automation.",
+  "version": "0.0.1",
+  "publisher": "google-antigravity",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "e2studio.extractVariable",
+        "title": "e2 studio: Extract Variable Value"
+      },
+      {
+        "command": "e2studio.stepInto",
+        "title": "e2 studio: Step Into (F5)"
+      },
+      {
+        "command": "e2studio.stepOver",
+        "title": "e2 studio: Step Over (F6)"
+      },
+      {
+        "command": "e2studio.resume",
+        "title": "e2 studio: Resume Execution (F8)"
+      },
+      {
+        "command": "e2studio.suspend",
+        "title": "e2 studio: Suspend Execution"
+      },
+      {
+        "command": "e2studio.openRegisters",
+        "title": "e2 studio: Open Registers View"
+      },
+      {
+        "command": "e2studio.openMemory",
+        "title": "e2 studio: Open Memory View"
+      },
+      {
+        "command": "e2studio.openDebug",
+        "title": "e2 studio: Open Debug (Call Stack) View"
+      },
+      {
+        "command": "e2studio.openRtos",
+        "title": "e2 studio: Open RTOS Resources View"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "18.x",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.4.1",
+    "@typescript-eslint/parser": "^6.4.1",
+    "@vscode/vsce": "^2.31.1",
+    "eslint": "^8.47.0",
+    "typescript": "^5.1.6"
+  }
+}
