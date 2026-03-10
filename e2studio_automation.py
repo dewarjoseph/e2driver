@@ -1,6 +1,13 @@
+import sys
+import os
+import time
+
+# Add submodule paths to sys.path so we can import from them natively
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'pywinauto_src')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'clipboard_src')))
+
 from pywinauto.application import Application
 from pywinauto.keyboard import send_keys
-import time
 
 # 1. Connect to Running e2 studio (Must use UIA for Eclipse/SWT)
 print(">> Hooking into e2 studio...")
@@ -44,6 +51,10 @@ except Exception as e:
     # METHOD B: The Clipboard Hack (Universal Fallback)
     # If we can't read the object, we copy it.
     send_keys("^c") # Ctrl+C
-    import clipboard
-    val = clipboard.paste()
+    try:
+        import clipboard
+        val = clipboard.paste()
+    except ImportError:
+        print(">> Warning: clipboard submodule failed to load.")
+        val = "N/A"
     print(f"CAPTURED VALUE (Method B): {val}")

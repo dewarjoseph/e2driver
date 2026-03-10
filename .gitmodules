@@ -1,0 +1,6 @@
+[submodule "pywinauto_src"]
+	path = pywinauto_src
+	url = https://github.com/pywinauto/pywinauto.git
+[submodule "clipboard_src"]
+	path = clipboard_src
+	url = https://github.com/terryyin/clipboard.git
